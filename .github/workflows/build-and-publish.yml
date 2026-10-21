@@ -56,11 +56,11 @@ jobs:
       - name: Build rootful armv7 package with legacy gzip archives
         run: |
           export PATH="$THEOS/toolchain/linux/iphone/bin:$PATH"
-          make clean TARGET=iphone:clang:9.3:6.0 ARCHS=armv7
+          make clean TARGET=iphone:clang:10.3:6.0 ARCHS=armv7
           PACKAGE_VERSION=$(python3 tools/ci_version.py control)
           dpkg --validate-version "$PACKAGE_VERSION"
           printf 'IB6_PACKAGE_VERSION=%s\n' "$PACKAGE_VERSION" >> "$GITHUB_ENV"
-          make package FINALPACKAGE=1 PACKAGE_VERSION="$PACKAGE_VERSION" TARGET=iphone:clang:9.3:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS=-Werror=unguarded-availability
+          make package FINALPACKAGE=1 PACKAGE_VERSION="$PACKAGE_VERSION" TARGET=iphone:clang:10.3:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS=-Werror=unguarded-availability
       - name: Validate the binary shipped inside the package
         run: |
           mapfile -t DEBS < <(find packages -maxdepth 1 -type f -name '*.deb')
