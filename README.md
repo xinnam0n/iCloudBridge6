@@ -10,7 +10,7 @@
 
 软件源只在 Objective-C 原生测试、armv7 构建和包校验全部成功后更新；未通过时不会发布空包或假包。请以软件源网页的版本/下载信息及对应 Actions 结果确认实际可用性。在 Cydia → 软件源 → 编辑 → 添加中输入上述地址；需要设备的 HTTPS/TLS 支持正常。
 
-公开 CI 使用固定版本的 Theos、官方 SDK 10.3 和最低运行版本 iOS 6.0，并检查 Mach-O 架构、签名及依赖；这与本地默认 SDK 6.1 构建选择不同，均不替代 iOS 6.1.3 实机验证。见 [CI 构建说明](docs/CI_BUILD.md) 和 [Cydia 发布说明](docs/CYDIA_REPO.md)。
+公开 CI 使用固定版本的 Theos、社区镜像提供且经过 hash/实际 armv7 导出验证的 SDK 6.1，最低运行版本 iOS 6.0，并检查成品 Mach-O 架构、签名及依赖。CI 与本地默认构建目标一致，仍不替代 iOS 6.1.3 实机验证。SDK 镜像不等于 Apple 官方认证来源。见 [CI 构建说明](docs/CI_BUILD.md) 和 [Cydia 发布说明](docs/CYDIA_REPO.md)。
 
 用户本轮补充版本为 `1.1`；由于问题同时询问 GSAPort/TLSFix，暂不把这个数字强行归到某个包。安装前记录两个包的完整版本和设备 build。当前公开 GSAPort 的 2026-10-20 源码已包含部分 provisioning response 转换，不能用它替代设备安装版本的证据。
 
