@@ -37,8 +37,6 @@ jobs:
     name: armv7 iOS 6.0 deployment build
     runs-on: ubuntu-22.04
     timeout-minutes: 25
-    env:
-      THEOS: ${{ runner.temp }}/theos-icloudbridge6
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -51,7 +49,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential fakeroot rsync curl perl git libxml2 libtinfo5 xz-utils dpkg-dev
       - name: Install pinned Theos, toolchain and SDK
-        run: bash tools/ci-bootstrap.sh
+        run: |
+          export THEOS="$RUNNER_TEMP/theos-icloudbridge6"
+          printf 'THEOS=%s\n' "$THEOS" >> "$GITHUB_ENV"
+          bash tools/ci-bootstrap.sh
       - name: Build rootful armv7 package with legacy gzip archives
         run: |
           export PATH="$THEOS/toolchain/linux/iphone/bin:$PATH"
