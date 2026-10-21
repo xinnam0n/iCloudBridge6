@@ -280,7 +280,7 @@ static void TestBodyHeaders(void) {
         NSHTTPURLResponse *delivered = [h.recorder.responses objectAtIndex:0];
         NSData *body = [h.recorder.chunks objectAtIndex:0];
         NSDictionary *headers = [delivered allHeaderFields];
-        Check([[headers objectForKey:@"Content-Length"] unsignedIntegerValue] == [body length],"body edit recomputes exact content length");
+        Check([[headers objectForKey:@"Content-Length"] longLongValue] == (long long)[body length],"body edit recomputes exact content length");
         Check([[headers objectForKey:@"Content-Type"] isEqual:mime],"body edit preserves binary or XML MIME type");
         Check(!headers[@"Content-Encoding"] && !headers[@"Transfer-Encoding"] && !headers[@"ETag"] && !headers[@"Content-MD5"] && !headers[@"Digest"],"body edit removes stale encodings and digests");
         NSDictionary *parsed = [NSPropertyListSerialization propertyListWithData:body options:0 format:NULL error:NULL];
