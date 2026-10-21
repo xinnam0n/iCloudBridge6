@@ -47,7 +47,7 @@ jobs:
       - name: Install Linux build prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential fakeroot rsync curl perl git libxml2 libtinfo5 xz-utils dpkg-dev
+          sudo apt-get install -y build-essential fakeroot rsync curl perl git libxml2 libtinfo5 xz-utils unzip dpkg-dev
       - name: Install pinned Theos, toolchain and SDK
         run: |
           export THEOS="$RUNNER_TEMP/theos-icloudbridge6"
@@ -56,17 +56,18 @@ jobs:
       - name: Build rootful armv7 package with legacy gzip archives
         run: |
           export PATH="$THEOS/toolchain/linux/iphone/bin:$PATH"
-          make clean TARGET=iphone:clang:10.3:6.0 ARCHS=armv7
+          make clean TARGET=iphone:clang:6.1:6.0 ARCHS=armv7
           PACKAGE_VERSION=$(python3 tools/ci_version.py control)
           dpkg --validate-version "$PACKAGE_VERSION"
           printf 'IB6_PACKAGE_VERSION=%s\n' "$PACKAGE_VERSION" >> "$GITHUB_ENV"
-          make package FINALPACKAGE=1 PACKAGE_VERSION="$PACKAGE_VERSION" TARGET=iphone:clang:10.3:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS=-Werror=unguarded-availability
+          make package FINALPACKAGE=1 PACKAGE_VERSION="$PACKAGE_VERSION" TARGET=iphone:clang:6.1:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS=-Werror=unguarded-availability
       - name: Validate the binary shipped inside the package
         run: |
           mapfile -t DEBS < <(find packages -maxdepth 1 -type f -name '*.deb')
           test "${#DEBS[@]}" -eq 1
           test "$(dpkg-deb --field "${DEBS[0]}" Version)" = "$IB6_PACKAGE_VERSION"
           mkdir -p build-check reports
+          cp "$THEOS/ib6-sdk-report.json" reports/sdk.json
           dpkg-deb --extract "${DEBS[0]}" build-check
           DYLIB=build-check/Library/MobileSubstrate/DynamicLibraries/iCloudBridge6.dylib
           python3 tools/validate_macho.py "$DYLIB" --output reports/binary.json
