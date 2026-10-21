@@ -1,0 +1,11 @@
+.theos/
+packages/
+*.deb
+__pycache__/
+private-evidence/
+build/
+.test-temp/
+repo/
+reports/
+build-check/
+build-toolchain.tar.lzma

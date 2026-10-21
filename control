@@ -1,0 +1,9 @@
+Package: local.legacyapple.icloudbridge6
+Name: iCloudBridge6
+Version: 0.1.0
+Architecture: iphoneos-arm
+Description: Diagnostic iOS 6 iCloud provisioning bridge with opt-in metadata adaptation
+Maintainer: Legacy Apple OS Project
+Author: Legacy Apple OS Project
+Section: Tweaks
+Depends: mobilesubstrate, firmware (>= 6.0), firmware (<< 7.0)
