@@ -39,6 +39,22 @@ mkdir -p "$THEOS/sdks"
 unzip -q "$DOWNLOAD_DIR/sdk.zip" -d "$THEOS/sdks"
 python3 tools/validate_sdk.py "$THEOS/sdks/iPhoneOS6.1.sdk" > "$THEOS/ib6-sdk-report.json"
 cat "$THEOS/ib6-sdk-report.json"
+# clang 10 reads Version only from SDKSettings.json when emitting its
+# -platform_version linker arguments. Derive that build-only metadata from
+# the validated legacy plist, without modifying any SDK library or header.
+python3 - "$THEOS/sdks/iPhoneOS6.1.sdk" <<'PY'
+import json
+from pathlib import Path
+import plistlib
+import sys
+root = Path(sys.argv[1])
+metadata = plistlib.loads((root / "SDKSettings.plist").read_bytes())
+assert metadata["Version"] == "6.1" and metadata["CanonicalName"] == "iphoneos6.1"
+with (root / "SDKSettings.json").open("x", encoding="utf-8") as stream:
+    json.dump({"Version": metadata["Version"]}, stream)
+    stream.write("\n")
+PY
+cat "$THEOS/sdks/iPhoneOS6.1.sdk/SDKSettings.json"
 
 "$THEOS/toolchain/linux/iphone/bin/clang" --version
 test -f "$THEOS/sdks/iPhoneOS6.1.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h"
