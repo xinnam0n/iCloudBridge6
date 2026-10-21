@@ -21,6 +21,8 @@
 
 本地 Makefile 和 CI 均使用 `TARGET=iphone:clang:6.1:6.0 ARCHS=armv7`。`6.0` 是最低部署版本，`6.1` 是编译 SDK。安装脚本在 hash 校验后读取 SDKSettings，要求 Version 为 6.1、CanonicalName 为 iphoneos6.1，并解析七个核心真实 dylib 的 armv7 slice；额外要求上述五个缺失导出确实存在于对应库的 armv7 符号表。报告包含各库 hash。SDK 6.1 构建仍不等于 iOS 6.1.3 实机成功；动态调用的私有 selector 仍依赖运行时 ABI/能力检查和实机测试。
 
+交叉编译使用 `-fno-optimize-sibling-calls`，避免 clang 10 / 该版 cctools 对 ARM/Thumb ARC 尾调用分支的链接问题；实际失败位置为 `flushOriginal:` 中的 `_objc_release`。此选项保留普通调用/返回，不关闭 ARC、异常处理或链接符号检查。选项含义见 [Clang 命令行参考](https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-foptimize-sibling-calls)，跨模式尾调用为何需要特殊 shim 见 [LLVM Mach-O ShimPass](https://android.googlesource.com/toolchain/lld/+/35c021c49f44cd4e06875c4b1398a2b3464132bb/lib/ReaderWriter/MachO/ShimPass.cpp)。
+
 发布前读取包内真实 dylib，拒绝其他架构、最低系统版本不等于 6.0、SDK 字段不等于 6.1、现代/其他平台的 Mach-O 版本命令、未知 linked library、缺少 Substrate 链接或缺少嵌入签名。保留 SDK 元数据/armv7 导出验证报告、`otool`、undefined symbols、签名 entitlement 读取结果、包 SHA-256、source commit/run id。结构检查不能证明设备接受签名或所有私有 API 行为正常。
 
 Theos 使用 `THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip`，Cydia 发布器另行校验 `control.tar.gz` 与 `data.tar.gz`，以避免 iOS 6 的旧 dpkg 不支持现代压缩格式。没有安装/卸载脚本、自动杀 daemon 或强制 respring。
@@ -34,7 +36,7 @@ export THEOS="$(mktemp -d)/theos"
 bash tools/ci-bootstrap.sh
 export PATH="$THEOS/toolchain/linux/iphone/bin:$PATH"
 make clean TARGET=iphone:clang:6.1:6.0 ARCHS=armv7
-make package FINALPACKAGE=1 TARGET=iphone:clang:6.1:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS=-Werror=unguarded-availability
+make package FINALPACKAGE=1 TARGET=iphone:clang:6.1:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS="-Werror=unguarded-availability -fno-optimize-sibling-calls"
 ```
 
 Mac 测试使用 `sh tests/run-native.sh`；Python 测试使用 `python3 -m unittest discover -s tests -p 'test_*.py' -v`。Mac 测试通过只证明测试覆盖的主机行为，设备测试矩阵仍见 `TEST_MATRIX.md`。
