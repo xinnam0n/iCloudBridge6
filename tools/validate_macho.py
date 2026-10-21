@@ -74,8 +74,8 @@ def inspect(path: Path) -> dict:
     if offset != end or len(versions) != 1:
         raise ValueError("exactly one complete iPhoneOS minimum-version command required")
     minimum, sdk = versions[0]
-    if minimum != 0x00060000 or sdk != 0x00090300:
-        raise ValueError("release must target iOS 6.0 using declared SDK 9.3")
+    if minimum != 0x00060000 or sdk != 0x000A0300:
+        raise ValueError("release must target iOS 6.0 using declared SDK 10.3")
     if not has_signature:
         raise ValueError("unsigned tweak")
     if not any("substrate" in name.lower() for name in libraries):
@@ -85,7 +85,7 @@ def inspect(path: Path) -> dict:
         "bytes": len(data),
         "architecture": "armv7",
         "minimum_os": "6.0",
-        "sdk": "9.3",
+        "sdk": "10.3",
         "embedded_signature_present": True,
         "linked_libraries": libraries,
         "device_tested": False,

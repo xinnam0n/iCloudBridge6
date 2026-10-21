@@ -10,7 +10,7 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
-def fixture(*, minimum=0x60000, sdk=0x90300, cpu=12, subtype=9,
+def fixture(*, minimum=0x60000, sdk=0xA0300, cpu=12, subtype=9,
             library="/usr/lib/libsubstrate.dylib", signed=True, extra=b""):
     name = library.encode("ascii") + b"\0"
     size = (24 + len(name) + 3) & ~3
@@ -36,10 +36,11 @@ class ReleaseGateTests(unittest.TestCase):
     def test_declared_legacy_target(self):
         report = self.inspect(fixture())
         self.assertEqual(report["minimum_os"], "6.0")
+        self.assertEqual(report["sdk"], "10.3")
         self.assertFalse(report["device_tested"])
 
     def test_reject_wrong_architecture_and_deployment(self):
-        for changes in ({"cpu": 0x100000C}, {"subtype": 11}, {"minimum": 0x70000}, {"sdk": 0xA0300}):
+        for changes in ({"cpu": 0x100000C}, {"subtype": 11}, {"minimum": 0x70000}, {"sdk": 0x90300}):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 self.inspect(fixture(**changes))
 

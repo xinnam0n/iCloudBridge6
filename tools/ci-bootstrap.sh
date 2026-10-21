@@ -29,7 +29,7 @@ printf '%s  %s\n' "$TOOLCHAIN_SHA256" "$DOWNLOAD_DIR/toolchain.tar.lzma" | sha25
 mkdir -p "$THEOS/toolchain/linux/iphone"
 tar --lzma -xf "$DOWNLOAD_DIR/toolchain.tar.lzma" --strip-components=1 -C "$THEOS/toolchain/linux/iphone"
 
-# The official SDK repository has 9.3, not 6.1. The build explicitly keeps
+# The official SDK repository has 10.3, not 6.1. The build explicitly keeps
 # deployment at 6.0 and validates the resulting Mach-O; it does not claim a
 # native SDK 6.1 build or substitute for execution on iOS 6.1.3.
 SDK_CHECKOUT="${THEOS}-sdks"
@@ -38,12 +38,13 @@ if [[ -e "$SDK_CHECKOUT" ]]; then
     exit 2
 fi
 git clone --filter=blob:none --sparse --no-checkout https://github.com/theos/sdks.git "$SDK_CHECKOUT"
-git -C "$SDK_CHECKOUT" sparse-checkout set iPhoneOS9.3.sdk
+git -C "$SDK_CHECKOUT" sparse-checkout set iPhoneOS10.3.sdk
 git -C "$SDK_CHECKOUT" checkout --detach "$SDK_COMMIT"
 test "$(git -C "$SDK_CHECKOUT" rev-parse HEAD)" = "$SDK_COMMIT"
 mkdir -p "$THEOS/sdks"
-ln -s "$SDK_CHECKOUT/iPhoneOS9.3.sdk" "$THEOS/sdks/iPhoneOS9.3.sdk"
+ln -s "$SDK_CHECKOUT/iPhoneOS10.3.sdk" "$THEOS/sdks/iPhoneOS10.3.sdk"
 
 "$THEOS/toolchain/linux/iphone/bin/clang" --version
-test -f "$THEOS/sdks/iPhoneOS9.3.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h"
+test -f "$THEOS/sdks/iPhoneOS10.3.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h"
+test -f "$THEOS/sdks/iPhoneOS10.3.sdk/usr/lib/system/liblaunch.tbd"
 printf 'Theos=%s\nSDK=%s\nToolchainSHA256=%s\n' "$THEOS_COMMIT" "$SDK_COMMIT" "$TOOLCHAIN_SHA256"
