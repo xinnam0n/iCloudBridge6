@@ -60,7 +60,7 @@ jobs:
           PACKAGE_VERSION=$(python3 tools/ci_version.py control)
           dpkg --validate-version "$PACKAGE_VERSION"
           printf 'IB6_PACKAGE_VERSION=%s\n' "$PACKAGE_VERSION" >> "$GITHUB_ENV"
-          make package FINALPACKAGE=1 PACKAGE_VERSION="$PACKAGE_VERSION" TARGET=iphone:clang:6.1:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS="-Werror=unguarded-availability -fno-optimize-sibling-calls"
+          make package FINALPACKAGE=1 PACKAGE_VERSION="$PACKAGE_VERSION" TARGET=iphone:clang:6.1:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS="-Werror=unguarded-availability -fno-optimize-sibling-calls" ADDITIONAL_LDFLAGS=-Wl,-sdk_version,6.1
       - name: Validate the binary shipped inside the package
         run: |
           mapfile -t DEBS < <(find packages -maxdepth 1 -type f -name '*.deb')
@@ -70,9 +70,10 @@ jobs:
           cp "$THEOS/ib6-sdk-report.json" reports/sdk.json
           dpkg-deb --extract "${DEBS[0]}" build-check
           DYLIB=build-check/Library/MobileSubstrate/DynamicLibraries/iCloudBridge6.dylib
-          python3 tools/validate_macho.py "$DYLIB" --output reports/binary.json
           "$THEOS/toolchain/linux/iphone/bin/otool" -L "$DYLIB" > reports/linked-libraries.txt
           "$THEOS/toolchain/linux/iphone/bin/otool" -l "$DYLIB" > reports/load-commands.txt
+          cat reports/load-commands.txt
+          python3 tools/validate_macho.py "$DYLIB" --output reports/binary.json
           "$THEOS/toolchain/linux/iphone/bin/nm" -u "$DYLIB" > reports/undefined-symbols.txt
           "$THEOS/toolchain/linux/iphone/bin/ldid" -e "$DYLIB" > reports/entitlements.plist
           sha256sum "${DEBS[0]}" > reports/SHA256SUMS
