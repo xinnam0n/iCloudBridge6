@@ -9,16 +9,18 @@
 | Theos | `304e0799973e8145f32e4ca2de6c747a84b758ce` | [官方仓库 commit](https://github.com/theos/theos/commit/304e0799973e8145f32e4ca2de6c747a84b758ce)；submodules 使用此 commit 记录的版本 |
 | Linux x86_64 clang/cctools/ldid | `sbingner/llvm-project` 的 `v10.0.0-2` | [发布说明及工具链](https://github.com/sbingner/llvm-project/releases/tag/v10.0.0-2)；[Theos 历史官方安装文档](https://github.com/theos/theos/wiki/Installation-Linux/a055b938fd3a5b777d2913ab8dec3e93cde31000) |
 | 工具链 SHA-256 | `0e4e21888517d0cd8c96d1e297dd17125546a0366410a33b811910083cabe110` | 本轮下载公开 release asset 计算；安装脚本在解包前必须匹配 |
-| SDK | 官方 `theos/sdks` 的 `iPhoneOS9.3.sdk`，commit `0222fd5413cf4b9af096f37b4621afa2688572f7` | [SDK 仓库](https://github.com/theos/sdks/tree/0222fd5413cf4b9af096f37b4621afa2688572f7/iPhoneOS9.3.sdk) |
+| SDK | 官方 `theos/sdks` 的 `iPhoneOS10.3.sdk`，commit `0222fd5413cf4b9af096f37b4621afa2688572f7` | [SDK 仓库](https://github.com/theos/sdks/tree/0222fd5413cf4b9af096f37b4621afa2688572f7/iPhoneOS10.3.sdk) |
 | GitHub Actions | checkout v4、setup-python v5、artifact v4、Pages actions | 均固定到官方仓库在本轮核查的 40 字符 commit，而非浮动 tag |
 
 上游工具链发布没有独立 checksum/signature，本项目固定的是本次取回字节的 hash，不能把它表述为上游签名。SDK 和工具链只进入临时构建目录，不上传到本项目源码或 Cydia 仓库。Linux 系统包和 GitHub runner 镜像仍由平台更新；这是固定主要输入的可复建流程，不保证逐字节相同输出。
 
 ## SDK 与目标系统的区别
 
-源码 Makefile 为有旧开发环境的用户保留 `iphone:clang:6.1:6.0`。CI 使用明确的 `TARGET=iphone:clang:9.3:6.0 ARCHS=armv7`；官方 SDK 仓库没有 6.1。`6.0` 是最低部署版本，`9.3` 是编译 SDK，不能把此构建称为 SDK 6.1 构建或 iOS 6.1.3 实机成功。编译对未做保护的较新 API 使用 availability 错误检查；动态调用的私有 selector 仍依赖源码中的运行时 ABI/能力检查和实机测试。
+首次交叉编译已确认源码可编译为 armv7，但官方 SDK 9.3 的 `libSystem.tbd` 引用了其目录里不存在的 `liblaunch.dylib` stub，导致链接失败。CI 因此选择同一固定官方仓库中的 SDK 10.3；其实际包含 [liblaunch.tbd](https://github.com/theos/sdks/blob/0222fd5413cf4b9af096f37b4621afa2688572f7/iPhoneOS10.3.sdk/usr/lib/system/liblaunch.tbd)，支持 armv7。不补造符号或混入另一版本的库。
 
-发布前读取包内真实 dylib，拒绝其他架构、最低系统版本不等于 6.0、SDK 字段不等于 9.3、现代/其他平台的 Mach-O 版本命令、未知 linked library、缺少 Substrate 链接或缺少嵌入签名。保留 `otool`、undefined symbols、签名 entitlement 读取结果、包 SHA-256、source commit/run id。结构检查不能证明设备接受签名或所有私有 API 行为正常。
+源码 Makefile 为有旧开发环境的用户保留 `iphone:clang:6.1:6.0`。CI 使用明确的 `TARGET=iphone:clang:10.3:6.0 ARCHS=armv7`；官方 SDK 仓库没有 6.1。`6.0` 是最低部署版本，`10.3` 是编译 SDK，不能把此构建称为 SDK 6.1 构建或 iOS 6.1.3 实机成功。编译对未做保护的较新 API 使用 availability 错误检查；动态调用的私有 selector 仍依赖源码中的运行时 ABI/能力检查和实机测试。
+
+发布前读取包内真实 dylib，拒绝其他架构、最低系统版本不等于 6.0、SDK 字段不等于 10.3、现代/其他平台的 Mach-O 版本命令、未知 linked library、缺少 Substrate 链接或缺少嵌入签名。保留 `otool`、undefined symbols、签名 entitlement 读取结果、包 SHA-256、source commit/run id。结构检查不能证明设备接受签名或所有私有 API 行为正常。
 
 Theos 使用 `THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip`，Cydia 发布器另行校验 `control.tar.gz` 与 `data.tar.gz`，以避免 iOS 6 的旧 dpkg 不支持现代压缩格式。没有安装/卸载脚本、自动杀 daemon 或强制 respring。
 
@@ -30,8 +32,8 @@ Theos 使用 `THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip`，Cydia 发布器另行�
 export THEOS="$(mktemp -d)/theos"
 bash tools/ci-bootstrap.sh
 export PATH="$THEOS/toolchain/linux/iphone/bin:$PATH"
-make clean TARGET=iphone:clang:9.3:6.0 ARCHS=armv7
-make package FINALPACKAGE=1 TARGET=iphone:clang:9.3:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS=-Werror=unguarded-availability
+make clean TARGET=iphone:clang:10.3:6.0 ARCHS=armv7
+make package FINALPACKAGE=1 TARGET=iphone:clang:10.3:6.0 ARCHS=armv7 THEOS_PLATFORM_DEB_COMPRESSION_TYPE=gzip ADDITIONAL_CFLAGS=-Werror=unguarded-availability
 ```
 
 Mac 测试使用 `sh tests/run-native.sh`；Python 测试使用 `python3 -m unittest discover -s tests -p 'test_*.py' -v`。Mac 测试通过只证明测试覆盖的主机行为，设备测试矩阵仍见 `TEST_MATRIX.md`。
